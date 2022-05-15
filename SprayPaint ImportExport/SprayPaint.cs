@@ -68,7 +68,20 @@ public class SprayPaint
         if (outFile != null) bitmap.Save(outFile);
         return bitmap;
     }
-
+    static Bitmap tempBugFixer(Image image) // Canvas' cannot load beyond 128x128 pixels so smush picture into a frame suitable for the fact.
+    {
+        Bitmap canvasImage = new Bitmap(image, new Size(128, 128));
+        Bitmap returnImage = new Bitmap(256, 256);
+        for (int x = 0; x < returnImage.Width; x++)
+        {
+            for (int y = 0; y < returnImage.Height; y++)
+            {
+                Color color = x > 127 || y > 127 ? Color.FromArgb(0, 0, 0, 0) : canvasImage.GetPixel(x, y);
+                returnImage.SetPixel(x, y, color);
+            }
+        }
+        return returnImage;
+    }
     /// <summary>
     /// Converts an image file to a SUP data file suitable for graffitti
     /// </summary>
@@ -77,7 +90,8 @@ public class SprayPaint
     /// <returns>true or false if it successfully converts.</returns>
     public static bool Export(string readFile, string outFile)
     {
-        Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(256, 256));
+        //Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(256, 256));
+        Bitmap image = tempBugFixer(Image.FromFile(readFile));
         if (image.Width != 256 || image.Height != 256) return false;
         Dictionary<int, float> pixels = new Dictionary<int, float>();
         int pixelCount = 0;
@@ -105,7 +119,8 @@ public class SprayPaint
         }
         else
         {
-            Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(256, 256));
+            //Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(256, 256));
+            Bitmap image = tempBugFixer(Image.FromFile(readFile));
             Bitmap preview = new Bitmap(256, 256);
             if (image.Width != 256 || image.Height != 256) return null;
             for (int x = 0; x < image.Width; x++)
@@ -125,7 +140,7 @@ public class SprayPaint
 
 
 
-
+    // https://www.codeproject.com/Articles/1172815/Finding-Nearest-Colors-using-Euclidean-Distance
     public static int FindNearestColor(Color[] map, Color current)
     {
         int shortestDistance;
@@ -160,9 +175,9 @@ public class SprayPaint
         int alphaDifference;
 
         alphaDifference = current.A - match.A;
-        redDifference = current.R - match.R;
-        greenDifference = current.G - match.G;
-        blueDifference = current.B - match.B;
+        redDifference = (current.R  - match.R);
+        greenDifference = (current.G - match.G);
+        blueDifference = (current.B - match.B);
 
         return alphaDifference * alphaDifference + redDifference * redDifference +
                                  greenDifference * greenDifference + blueDifference * blueDifference;
