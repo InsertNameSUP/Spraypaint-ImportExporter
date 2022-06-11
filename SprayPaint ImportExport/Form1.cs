@@ -25,7 +25,7 @@ namespace SprayPaint_ImportExport
         }
         void CreatePreview()
         {
-            previewImage.Image = SprayPaint.CreatePreview(exportSetting, fileImport.FileName);
+            previewImage.Image = SprayPaint.CreatePreview(size256.Checked ? 256 : 512, exportSetting, fileImport.FileName);
         }
         private void openFile_Click(object sender, EventArgs e)
         {
@@ -54,7 +54,7 @@ namespace SprayPaint_ImportExport
                 {
                     if(exportSetting == SprayPaint.ExportSetting.ImageToGraffitti)
                     {
-                        SprayPaint.Export(fileImport.FileName, fileExport.FileName);
+                        SprayPaint.Export(size256.Checked ? 256 : 512, fileImport.FileName, fileExport.FileName);
                     } else
                     {
                         SprayPaint.Import(fileImport.FileName, fileExport.FileName);
@@ -62,6 +62,20 @@ namespace SprayPaint_ImportExport
                     
                 }
             }
+        }
+
+        private void previewImage_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void size256_CheckedChanged(object sender, EventArgs e)
+        {
+            if(fileImport.FileName != null)
+            {
+                CreatePreview();
+            }
+            
         }
     }
 }

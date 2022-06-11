@@ -35,7 +35,11 @@ namespace SprayPaint_ImportExport
             this.previewImage = new System.Windows.Forms.PictureBox();
             this.generateImage = new System.Windows.Forms.Button();
             this.fileExport = new System.Windows.Forms.SaveFileDialog();
+            this.size256 = new System.Windows.Forms.RadioButton();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.size512 = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.previewImage)).BeginInit();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFile
@@ -66,6 +70,7 @@ namespace SprayPaint_ImportExport
             this.previewImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.previewImage.TabIndex = 1;
             this.previewImage.TabStop = false;
+            this.previewImage.Click += new System.EventHandler(this.previewImage_Click);
             // 
             // generateImage
             // 
@@ -85,6 +90,41 @@ namespace SprayPaint_ImportExport
             // 
             this.fileExport.Filter = "Text (*.txt)|*.txt";
             // 
+            // size256
+            // 
+            this.size256.AutoSize = true;
+            this.size256.Checked = true;
+            this.size256.ForeColor = System.Drawing.Color.White;
+            this.size256.Location = new System.Drawing.Point(3, 3);
+            this.size256.Name = "size256";
+            this.size256.Size = new System.Drawing.Size(43, 19);
+            this.size256.TabIndex = 0;
+            this.size256.TabStop = true;
+            this.size256.Text = "256";
+            this.size256.UseVisualStyleBackColor = true;
+            this.size256.CheckedChanged += new System.EventHandler(this.size256_CheckedChanged);
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.panel1.Controls.Add(this.size512);
+            this.panel1.Controls.Add(this.size256);
+            this.panel1.Location = new System.Drawing.Point(571, 105);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(200, 100);
+            this.panel1.TabIndex = 8;
+            // 
+            // size512
+            // 
+            this.size512.AutoSize = true;
+            this.size512.ForeColor = System.Drawing.Color.White;
+            this.size512.Location = new System.Drawing.Point(3, 28);
+            this.size512.Name = "size512";
+            this.size512.Size = new System.Drawing.Size(43, 19);
+            this.size512.TabIndex = 1;
+            this.size512.Text = "512";
+            this.size512.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -93,6 +133,7 @@ namespace SprayPaint_ImportExport
             this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.generateImage);
             this.Controls.Add(this.previewImage);
             this.Controls.Add(this.openFile);
@@ -102,6 +143,8 @@ namespace SprayPaint_ImportExport
             this.Name = "Form1";
             this.Text = "Spraypaint Import-Exporter";
             ((System.ComponentModel.ISupportInitialize)(this.previewImage)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -114,6 +157,9 @@ namespace SprayPaint_ImportExport
         private System.Windows.Forms.Button generateImage;
         private System.Windows.Forms.SaveFileDialog fileExport;
         private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.RadioButton size256;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.RadioButton size512;
     }
 }
 

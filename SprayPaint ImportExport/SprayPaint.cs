@@ -27,6 +27,7 @@ public class SprayPaint
 
 };
     const int totalPixelCount = 65536;
+    const int frameHeight = 256, frameWidth = 256;
     /// <summary>
     /// Imports a save file from SUP data file and converts it to a bitmap
     /// </summary>
@@ -76,19 +77,17 @@ public class SprayPaint
     /// <param name="readFile">An image file</param>
     /// <param name="outFile">Output file where the data file will be saved</param>
     /// <returns>true or false if it successfully converts.</returns>
-    public static bool Export(string readFile, string outFile)
+    public static bool Export(int exportSize, string readFile, string outFile)
     {
-        Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(256, 256));
-        //Bitmap image = tempBugFixer(Image.FromFile(readFile));
-        if (image.Width != 256 || image.Height != 256) return false;
+        Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
         Dictionary<int, int> pixels = new Dictionary<int, int>();
         int pixelCount = 0;
-        for (int x = 0; x < image.Width; x++)
+        for (int x = 0; x < 256; x++)
         {
-            for (int y = 0; y < image.Height; y++)
+            for (int y = 0; y < 256; y++)
             {
-                if (image.GetPixel(x, image.Height - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { pixelCount++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
-                int colorIndex = FindNearestColor(colors, image.GetPixel(x, image.Height - 1 - y));
+                if (image.GetPixel(x, frameHeight - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { pixelCount++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
+                int colorIndex = FindNearestColor(colors, image.GetPixel(x, frameHeight - 1 - y));
                 pixels.Add(totalPixelCount - pixelCount, colorIndex + 1);
                 //Console.WriteLine(pixelCount);
                 pixelCount++;
@@ -96,10 +95,27 @@ public class SprayPaint
         }
         string serializedImage = Pon.Encode(pixels);
         File.WriteAllText(outFile, serializedImage);
-        //Console.Read();
+        pixels.Clear();
+        if (exportSize == 512)
+        {
+            int secondImgPC = 0;
+            for (int x = 0; x < 256; x++)
+            {
+                for (int y = 0; y < 256; y++)
+                {
+                    if (image.GetPixel(x + frameWidth, frameHeight - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { secondImgPC++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
+                    int colorIndex = FindNearestColor(colors, image.GetPixel(x + frameWidth, frameHeight - 1 - y));
+                    pixels.Add(totalPixelCount - secondImgPC, colorIndex + 1);
+                    //Console.WriteLine(pixelCount);
+                    secondImgPC++;
+                }
+            }
+            string secondSerializedImage = Pon.Encode(pixels);
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(outFile), Path.GetFileNameWithoutExtension(outFile) + "_part2.txt"), secondSerializedImage);
+        }
         return true;
     }
-    public static Bitmap? CreatePreview(ExportSetting setting, string readFile)
+    public static Bitmap? CreatePreview(int exportSize, ExportSetting setting, string readFile)
     {
         if (setting == ExportSetting.GraffittiToImage)
         {
@@ -107,9 +123,9 @@ public class SprayPaint
         }
         else
         {
-            Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(256, 256));
-            Bitmap preview = new Bitmap(256, 256);
-            if (image.Width != 256 || image.Height != 256) return null;
+            Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
+            Bitmap preview = new Bitmap(exportSize, 256);
+            //if (image.Width != 256 || image.Height != 256) return null;
             for (int x = 0; x < image.Width; x++)
             {
                 for (int y = 0; y < image.Height; y++)
