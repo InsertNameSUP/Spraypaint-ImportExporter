@@ -25,6 +25,7 @@ namespace SprayPaint_ImportExport
         }
         void CreatePreview()
         {
+            if(previewImage.Image != null) previewImage.Image.Dispose();
             previewImage.Image = SprayPaint.CreatePreview(size256.Checked ? 256 : 512, exportSetting, fileImport.FileName);
         }
         private void openFile_Click(object sender, EventArgs e)

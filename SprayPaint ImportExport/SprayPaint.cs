@@ -4,7 +4,6 @@ using System.Text;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using SprayPaint_ImportExport;
 
 public class SprayPaint
@@ -28,6 +27,8 @@ public class SprayPaint
 };
     const int totalPixelCount = 65536;
     const int frameHeight = 256, frameWidth = 256;
+
+    static Bitmap image;
     /// <summary>
     /// Imports a save file from SUP data file and converts it to a bitmap
     /// </summary>
@@ -35,10 +36,8 @@ public class SprayPaint
     /// <param name="outFile"> Where to export image to after processing (if null, it will not output to file</param>
     public static Bitmap? Import(string readFile, string outFile = null)
     {
-
-        string jsonDeTest = File.ReadAllText(readFile);
-
-        var bitmap = new Bitmap(256, 256); // Size of canvas
+        if (image != null) image.Dispose();
+        image = new Bitmap(256, 256); // Size of canvas
         Dictionary<int, int> pixels;
         try
         {
@@ -50,36 +49,40 @@ public class SprayPaint
         }
 
         int i = 0;
-        for (var x = 0; x < bitmap.Width; x++)
+        for (var x = 0; x < image.Width; x++)
         {
-            for (var y = 0; y < bitmap.Height; y++)
+            for (var y = 0; y < image.Height; y++)
             {
                 int value;
                 if (pixels.TryGetValue(i, out value))
                 {
                     int val = (int)value - 1; // Value in save file starts at index of 1
                                               // Flip X value because otherwise it looks flipped on the Y Axis
-                    bitmap.SetPixel(bitmap.Width - 1 - x, y, colors[val]);
+                    image.SetPixel(image.Width - 1 - x, y, colors[val]);
                 }
                 else
                 {
-                    bitmap.SetPixel(bitmap.Width - 1 - x, y, Color.Transparent);
+                    image.SetPixel(image.Width - 1 - x, y, Color.Transparent);
                 }
                 i++;
             }
         }
-        if (outFile != null) bitmap.Save(outFile);
-        return bitmap;
+        if (outFile != null)
+        {
+            image.Save(outFile);
+            image.Dispose();
+        }
+        return image;
     }
     /// <summary>
     /// Converts an image file to a SUP data file suitable for graffitti
     /// </summary>
     /// <param name="readFile">An image file</param>
     /// <param name="outFile">Output file where the data file will be saved</param>
-    /// <returns>true or false if it successfully converts.</returns>
-    public static bool Export(int exportSize, string readFile, string outFile)
+    public static void Export(int exportSize, string readFile, string outFile)
     {
-        Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
+        if (image != null) image.Dispose();
+        image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
         Dictionary<int, int> pixels = new Dictionary<int, int>();
         int pixelCount = 0;
         for (int x = 0; x < 256; x++)
@@ -110,10 +113,11 @@ public class SprayPaint
                     secondImgPC++;
                 }
             }
+            if(image != null) image.Dispose();
             string secondSerializedImage = Pon.Encode(pixels);
+  
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(outFile), Path.GetFileNameWithoutExtension(outFile) + "_part2.txt"), secondSerializedImage);
         }
-        return true;
     }
     public static Bitmap? CreatePreview(int exportSize, ExportSetting setting, string readFile)
     {
@@ -123,7 +127,8 @@ public class SprayPaint
         }
         else
         {
-            Bitmap image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
+            if (image != null) image.Dispose();
+            image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
             Bitmap preview = new Bitmap(exportSize, 256);
             //if (image.Width != 256 || image.Height != 256) return null;
             for (int x = 0; x < image.Width; x++)
@@ -135,6 +140,7 @@ public class SprayPaint
                     preview.SetPixel(x, y, colors[colorIndex]);
                 }
             }
+            image.Dispose();
             return preview;
         }
     }

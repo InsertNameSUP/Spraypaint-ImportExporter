@@ -15,9 +15,7 @@ namespace SprayPaint_ImportExport
             Dictionary<int, int> allValues = new Dictionary<int, int>();
             for (int x = 0; x < splitValues.Length; x += 2)
             {
-                Console.WriteLine(splitValues[x]);
                 allValues.Add(DecodeHex(splitValues[x]), DecodeHex(splitValues[x + 1]));
-
             }
             return allValues;
         }
