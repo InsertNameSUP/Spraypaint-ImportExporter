@@ -13,6 +13,7 @@ namespace SprayPaint_ImportExport
 {
     public partial class Form1 : Form
     {
+        static DialogResult? fileDialog = null;
         static readonly string[] exportFilters = new string[]
         {
             "Graffitti File (*.txt)|*.txt",
@@ -25,12 +26,16 @@ namespace SprayPaint_ImportExport
         }
         void CreatePreview()
         {
-            if(previewImage.Image != null) previewImage.Image.Dispose();
-            previewImage.Image = SprayPaint.CreatePreview(size256.Checked ? 256 : 512, exportSetting, fileImport.FileName);
+            if(fileImport.FileName != null)
+            {
+                if (previewImage.Image != null) previewImage.Image.Dispose();
+                previewImage.Image = SprayPaint.CreatePreview(size256.Checked ? 256 : 512, exportSetting, fileImport.FileName);
+            }
         }
         private void openFile_Click(object sender, EventArgs e)
         {
-            if(fileImport.ShowDialog() == DialogResult.OK)
+            fileDialog = fileImport.ShowDialog();
+            if (fileDialog == DialogResult.OK)
             {
                 string? fileType = Path.GetExtension(fileImport.FileName);
                 exportSetting = fileType == ".txt" ? SprayPaint.ExportSetting.GraffittiToImage : SprayPaint.ExportSetting.ImageToGraffitti;
@@ -72,7 +77,7 @@ namespace SprayPaint_ImportExport
 
         private void size256_CheckedChanged(object sender, EventArgs e)
         {
-            if(fileImport.FileName != null)
+            if(fileDialog == DialogResult.OK)
             {
                 CreatePreview();
             }
