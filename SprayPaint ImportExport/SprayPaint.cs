@@ -118,6 +118,7 @@ public class SprayPaint
   
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(outFile), Path.GetFileNameWithoutExtension(outFile) + "_part2.txt"), secondSerializedImage);
         }
+        pixels.Clear();
     }
     public static Bitmap? CreatePreview(int exportSize, ExportSetting setting, string readFile)
     {
