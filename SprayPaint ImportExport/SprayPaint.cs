@@ -5,7 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using SprayPaint_ImportExport;
-
+using AForge;
 public class SprayPaint
 {
     public enum ExportSetting
@@ -83,6 +83,9 @@ public class SprayPaint
     {
         if (image != null) image.Dispose();
         image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
+        AForge.Imaging.ColorReduction.FloydSteinbergColorDithering dithering = new AForge.Imaging.ColorReduction.FloydSteinbergColorDithering();
+        dithering.ColorTable = colors;
+        image = dithering.Apply(image);
         Dictionary<int, int> pixels = new Dictionary<int, int>();
         int pixelCount = 0;
         for (int x = 0; x < 256; x++)
@@ -90,7 +93,7 @@ public class SprayPaint
             for (int y = 0; y < 256; y++)
             {
                 if (image.GetPixel(x, frameHeight - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { pixelCount++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
-                int colorIndex = FindNearestColor(colors, image.GetPixel(x, frameHeight - 1 - y));
+                int colorIndex = GetColor(image.GetPixel(x, frameHeight - 1 - y));
                 pixels.Add(totalPixelCount - pixelCount, colorIndex + 1);
                 //Console.WriteLine(pixelCount);
                 pixelCount++;
@@ -107,15 +110,15 @@ public class SprayPaint
                 for (int y = 0; y < 256; y++)
                 {
                     if (image.GetPixel(x + frameWidth, frameHeight - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { secondImgPC++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
-                    int colorIndex = FindNearestColor(colors, image.GetPixel(x + frameWidth, frameHeight - 1 - y));
+                    int colorIndex = GetColor(image.GetPixel(x + frameWidth, frameHeight - 1 - y));
                     pixels.Add(totalPixelCount - secondImgPC, colorIndex + 1);
                     //Console.WriteLine(pixelCount);
                     secondImgPC++;
                 }
             }
-            if(image != null) image.Dispose();
+            if (image != null) image.Dispose();
             string secondSerializedImage = Pon.Encode(pixels);
-  
+
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(outFile), Path.GetFileNameWithoutExtension(outFile) + "_part2.txt"), secondSerializedImage);
         }
         pixels.Clear();
@@ -126,70 +129,21 @@ public class SprayPaint
         {
             return Import(readFile);
         }
-        else
-        {
-            if (image != null) image.Dispose();
-            image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
-            Bitmap preview = new Bitmap(exportSize, 256);
-            //if (image.Width != 256 || image.Height != 256) return null;
-            for (int x = 0; x < image.Width; x++)
-            {
-                for (int y = 0; y < image.Height; y++)
-                {
-                    if (image.GetPixel(x, y) == Color.FromArgb(0, 0, 0, 0)) { continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
-                    int colorIndex = FindNearestColor(colors, image.GetPixel(x, y));
-                    preview.SetPixel(x, y, colors[colorIndex]);
-                }
-            }
-            image.Dispose();
-            return preview;
-        }
+        if (image != null) image.Dispose();
+        image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
+        AForge.Imaging.ColorReduction.FloydSteinbergColorDithering dithering = new AForge.Imaging.ColorReduction.FloydSteinbergColorDithering();
+        dithering.ColorTable = colors;
+        return dithering.Apply(image);
     }
 
 
-
-
-
-    // https://www.codeproject.com/Articles/1172815/Finding-Nearest-Colors-using-Euclidean-Distance
-    public static int FindNearestColor(Color[] map, Color current)
+    static int GetColor(Color col)
     {
-        int shortestDistance;
-        int index;
 
-        index = -1;
-        shortestDistance = int.MaxValue;
-
-        for (int i = 0; i < map.Length; i++)
+        for(int x = 0; x < colors.Length; x++)
         {
-            Color match;
-            int distance;
-
-            match = map[i];
-            distance = GetDistance(current, match);
-
-            if (distance < shortestDistance)
-            {
-                index = i;
-                shortestDistance = distance;
-            }
+            if (colors[x].Equals(col)) return x;
         }
-
-        return index;
-    }
-
-    public static int GetDistance(Color current, Color match)
-    {
-        int redDifference;
-        int greenDifference;
-        int blueDifference;
-        int alphaDifference;
-
-        alphaDifference = current.A - match.A;
-        redDifference = (current.R  - match.R);
-        greenDifference = (current.G - match.G);
-        blueDifference = (current.B - match.B);
-
-        return alphaDifference * alphaDifference + redDifference * redDifference +
-                                 greenDifference * greenDifference + blueDifference * blueDifference;
+        return 0; // Return black if error
     }
 }
