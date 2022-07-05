@@ -13,17 +13,42 @@ public class SprayPaint
         ImageToGraffitti,
         GraffittiToImage
     }
+    /*
+    rp.cfg.GraffitiColors={
+                           Color(0,0,0)
+                           Color(255,255,255),
+                            Color(255,0,0),
+                            Color(0,255,0),
+                            Color(0,0,255),
+                            Color(255,255,0),
+                            Color(255,0,255),
+                            Color(0,255,255),
+                            Color(255,200,0),
+                            Color(255,150,0),
+                            Color(255,80,0),
+                            Color(150,0,150),
+                            Color(100,0,200),
+                            Color(80,0,255),
+                            Color(155,255,0)
+    } 
+     */
     static readonly Color[] colors = new Color[]
 {
                 Color.FromArgb(0, 0, 0), // Black
                 Color.FromArgb(255, 255, 255), // White
-                Color.FromArgb(255, 0, 0), // Red
-                Color.FromArgb(0, 255, 0), // Green
-                Color.FromArgb(0, 0, 255), // Blue
+                Color.FromArgb(255, 0, 0), // Yellow
+                Color.FromArgb(0, 255, 0), // Yellow
+                Color.FromArgb(0, 0, 255), // Yellow
                 Color.FromArgb(255, 255, 0), // Yellow
-                Color.FromArgb(255, 0, 255), // Purple
-                Color.FromArgb(0, 255, 255), // Teal
-
+                Color.FromArgb(255, 0, 255), // Red
+                Color.FromArgb(0, 255, 255), // Pink
+                Color.FromArgb(255, 200, 0), // Pink
+                Color.FromArgb(255, 150, 0), // Pink
+                Color.FromArgb(255, 80, 0), // Pink
+                Color.FromArgb(150, 0, 150), // Blue
+                Color.FromArgb(100, 0, 200), // Teal
+                Color.FromArgb(80, 0, 255), // Green
+                Color.FromArgb(155, 255, 0), // Green
 };
     const int totalPixelCount = 65536;
     const int frameHeight = 256, frameWidth = 256;
@@ -34,29 +59,21 @@ public class SprayPaint
     /// </summary>
     /// <param name="readFile">Input File Location</param>
     /// <param name="outFile"> Where to export image to after processing (if null, it will not output to file</param>
-    public static Bitmap? Import(string readFile, string outFile = null)
+    public static Bitmap? Graffiti2Img(string readFile, string outFile = null)
     {
         if (image != null) image.Dispose();
         image = new Bitmap(256, 256); // Size of canvas
-        Dictionary<int, int> pixels;
-        try
-        {
-            pixels = Pon.Decode(File.ReadAllText(readFile));
-        }
-        catch (Exception err)
-        {
-            return null;
-        }
+        UInt16[] pixels;
+        pixels = readFile.EndsWith(".txt") ? Pon.Decode(File.ReadAllText(readFile)) : Binary.UnBinarify(readFile);
 
         int i = 0;
         for (var x = 0; x < image.Width; x++)
         {
             for (var y = 0; y < image.Height; y++)
             {
-                int value;
-                if (pixels.TryGetValue(i, out value))
+                if (pixels[i] != 0)
                 {
-                    int val = (int)value - 1; // Value in save file starts at index of 1
+                    int val = pixels[i] - 1; // Value in save file starts at index of 1
                                               // Flip X value because otherwise it looks flipped on the Y Axis
                     image.SetPixel(image.Width - 1 - x, y, colors[val]);
                 }
@@ -79,7 +96,7 @@ public class SprayPaint
     /// </summary>
     /// <param name="readFile">An image file</param>
     /// <param name="outFile">Output file where the data file will be saved</param>
-    public static void Export(int exportSize, string readFile, string outFile)
+    public static void Img2Graffiti(int exportSize, string readFile, string outFile)
     {
         if (image != null) image.Dispose();
         image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
@@ -92,7 +109,7 @@ public class SprayPaint
         {
             for (int y = 0; y < 256; y++)
             {
-                if (image.GetPixel(x, frameHeight - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { pixelCount++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
+                if (image.GetPixel(x, frameHeight - 1 - y).A == 0) { pixelCount++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
                 int colorIndex = GetColor(image.GetPixel(x, frameHeight - 1 - y));
                 pixels.Add(totalPixelCount - pixelCount, colorIndex + 1);
                 //Console.WriteLine(pixelCount);
@@ -127,7 +144,7 @@ public class SprayPaint
     {
         if (setting == ExportSetting.GraffittiToImage)
         {
-            return Import(readFile);
+            return Graffiti2Img(readFile);
         }
         if (image != null) image.Dispose();
         image = new Bitmap(Image.FromFile(readFile), new Size(exportSize, 256));
@@ -146,4 +163,51 @@ public class SprayPaint
         }
         return 0; // Return black if error
     }
+    class Binary
+    {
+        public static UInt16[] UnBinarify(string filePath) // https://www.dotnetperls.com/binaryreader with a few additions to better suit spraypaint
+        {
+            UInt16[] decoded = new UInt16[65536];
+            // 1.
+            using (BinaryReader b = new BinaryReader(
+                File.Open(filePath, FileMode.Open)))
+            {
+                // 2.
+                // Position and length variables.
+                int pos = 0;
+                // 2A.
+                // Use BaseStream.
+                int length = (int)b.BaseStream.Length;
+                while (pos < length)
+                {
+                    // 3.
+                    // Read integer.
+                    ushort v = (ushort)(b.ReadUInt16() >> 8);
+                    decoded[pos] = v;
+                    // 4.
+                    // Advance our position variable.
+                    pos += sizeof(ushort);
+                }
+                b.Close();
+                b.Dispose();
+                return decoded;
+            }
+        }
+
+        public static void ReBinarify(int[] pixels, string filePath)
+        {
+            using(BinaryWriter b = new BinaryWriter(File.Open(filePath, FileMode.Open)))
+            {
+                int pos = 0;
+
+                for(int x = 0; x > pixels.Length; x++)
+                {
+                    b.Write(pixels[x]);
+                }
+                b.Close();
+                b.Dispose();
+            }
+        }
+    }
+    
 }

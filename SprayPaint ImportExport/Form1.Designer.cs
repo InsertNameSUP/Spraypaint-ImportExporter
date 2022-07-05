@@ -60,7 +60,8 @@ namespace SprayPaint_ImportExport
             // fileImport
             // 
             this.fileImport.FileName = "openFileDialog1";
-            this.fileImport.Filter = "Graffiti or Image File (*.txt, *.png, *.jpg, *.jpeg)|*.txt; *.png; *.jpg;*.jpeg";
+            this.fileImport.Filter = "Graffiti or Image File (*.txt, *.png, *.jpg, *.jpeg)|*.dat;*.txt; *.png; *.jpg;*." +
+    "jpeg";
             // 
             // previewImage
             // 

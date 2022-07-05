@@ -39,7 +39,7 @@ namespace SprayPaint_ImportExport
             if (fileDialog == DialogResult.OK)
             {
                 string? fileType = Path.GetExtension(fileImport.FileName);
-                exportSetting = fileType == ".txt" ? SprayPaint.ExportSetting.GraffittiToImage : SprayPaint.ExportSetting.ImageToGraffitti;
+                exportSetting = fileType == ".txt" || fileType == ".dat" ? SprayPaint.ExportSetting.GraffittiToImage : SprayPaint.ExportSetting.ImageToGraffitti;
 
 
                 if(exportSetting == SprayPaint.ExportSetting.ImageToGraffitti)
@@ -61,10 +61,10 @@ namespace SprayPaint_ImportExport
                 {
                     if(exportSetting == SprayPaint.ExportSetting.ImageToGraffitti)
                     {
-                        SprayPaint.Export(size256.Checked ? 256 : 512, fileImport.FileName, fileExport.FileName);
+                        SprayPaint.Img2Graffiti(size256.Checked ? 256 : 512, fileImport.FileName, fileExport.FileName);
                     } else
                     {
-                        SprayPaint.Import(fileImport.FileName, fileExport.FileName);
+                        SprayPaint.Graffiti2Img(fileImport.FileName, fileExport.FileName);
                     }
                     
                 }
