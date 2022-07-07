@@ -17,7 +17,7 @@ namespace SprayPaint_ImportExport
         static DialogResult? fileDialog = null;
         static readonly string[] exportFilters = new string[]
         {
-            "Graffitti File (*.txt)|*.txt",
+            "Graffitti File (*.dat)|*.dat",
             "PNG (*.png)|*.png",
         };
         static SprayPaint.ExportSetting exportSetting = SprayPaint.ExportSetting.ImageToGraffitti;

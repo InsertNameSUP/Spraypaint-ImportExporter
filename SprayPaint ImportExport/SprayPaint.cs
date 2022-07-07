@@ -64,8 +64,8 @@ public class SprayPaint
         if (image != null) image.Dispose();
         image = new Bitmap(256, 256); // Size of canvas
         UInt16[] pixels;
-        pixels = readFile.EndsWith(".txt") ? Pon.Decode(File.ReadAllText(readFile)) : Binary.UnBinarify(readFile);
-
+        //pixels = readFile.EndsWith(".txt") ? Pon.Decode(File.ReadAllText(readFile)) : Binary.UnBinarify(readFile);
+        pixels = Binary.UnBinarify(readFile);
         int i = 0;
         for (var x = 0; x < image.Width; x++)
         {
@@ -103,22 +103,25 @@ public class SprayPaint
         AForge.Imaging.ColorReduction.FloydSteinbergColorDithering dithering = new AForge.Imaging.ColorReduction.FloydSteinbergColorDithering();
         dithering.ColorTable = colors;
         image = dithering.Apply(image);
-        Dictionary<int, int> pixels = new Dictionary<int, int>();
+        int[] pixels = new int[totalPixelCount];
         int pixelCount = 0;
         for (int x = 0; x < 256; x++)
         {
             for (int y = 0; y < 256; y++)
             {
-                if (image.GetPixel(x, frameHeight - 1 - y).A == 0) { pixelCount++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
+                //if (image.GetPixel(x, frameHeight - 1 - y).A == 0) { pixelCount++; continue; } 
+                
+                // image.Height - 1 to invert image to be oriented correctly (flip X axis)
                 int colorIndex = GetColor(image.GetPixel(x, frameHeight - 1 - y));
-                pixels.Add(totalPixelCount - pixelCount, colorIndex + 1);
+                pixels[totalPixelCount - pixelCount - 1] = colorIndex + 1;
                 //Console.WriteLine(pixelCount);
                 pixelCount++;
             }
         }
-        string serializedImage = Pon.Encode(pixels);
-        File.WriteAllText(outFile, serializedImage);
-        pixels.Clear();
+        /*        string serializedImage = Pon.Encode(pixels);
+                File.WriteAllText(outFile, serializedImage);*/
+        Binary.ReBinarify(pixels, outFile);
+        Array.Clear(pixels, 0, totalPixelCount);
         if (exportSize == 512)
         {
             int secondImgPC = 0;
@@ -128,17 +131,14 @@ public class SprayPaint
                 {
                     if (image.GetPixel(x + frameWidth, frameHeight - 1 - y) == Color.FromArgb(0, 0, 0, 0)) { secondImgPC++; continue; } // image.Height - 1 to invert image to be oriented correctly (flip X axis)
                     int colorIndex = GetColor(image.GetPixel(x + frameWidth, frameHeight - 1 - y));
-                    pixels.Add(totalPixelCount - secondImgPC, colorIndex + 1);
+                    pixels[totalPixelCount - secondImgPC - 1] = colorIndex + 1;
                     //Console.WriteLine(pixelCount);
                     secondImgPC++;
                 }
             }
             if (image != null) image.Dispose();
-            string secondSerializedImage = Pon.Encode(pixels);
-
-            File.WriteAllText(Path.Combine(Path.GetDirectoryName(outFile), Path.GetFileNameWithoutExtension(outFile) + "_part2.txt"), secondSerializedImage);
+           Binary.ReBinarify(pixels, Path.Combine(Path.GetDirectoryName(outFile), Path.GetFileNameWithoutExtension(outFile) + "_Part 2.dat"));    
         }
-        pixels.Clear();
     }
     public static Bitmap? CreatePreview(int exportSize, ExportSetting setting, string readFile)
     {
@@ -196,13 +196,25 @@ public class SprayPaint
 
         public static void ReBinarify(int[] pixels, string filePath)
         {
-            using(BinaryWriter b = new BinaryWriter(File.Open(filePath, FileMode.Open)))
+            using(BinaryWriter b = new BinaryWriter(File.OpenWrite(filePath)))
             {
                 int pos = 0;
 
-                for(int x = 0; x > pixels.Length; x++)
+                for(int x = 0; x < 256; x++)
                 {
-                    b.Write(pixels[x]);
+                    for (int y = 0; y < 256; y++)
+                    {
+                        if(pixels[pos] != 0)
+                        {
+                            b.Write((byte)(pixels[pos]));
+                        } else
+                        {
+                            b.Write((byte)0);
+                        }
+                        
+                        pos++;
+                    }
+                    
                 }
                 b.Close();
                 b.Dispose();
